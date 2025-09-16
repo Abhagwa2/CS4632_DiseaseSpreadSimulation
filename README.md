@@ -18,3 +18,13 @@ Implements an SIR/SEIR-based simulation of infectious disease spread in a popula
 
 ## Author
 Alejandro Bhagwandeen
+
+# CS4632 Disease Spread Simulation
+
+Initial repo setup for Milestone 2.
+
+## Project Structure
+- `/src` : Java source code
+- `/docs` : UML diagrams, reports
+- `README.md` : project overview
+- `.gitignore` : Java build ignores
