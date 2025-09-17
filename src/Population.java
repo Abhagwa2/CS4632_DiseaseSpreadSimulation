@@ -67,8 +67,31 @@ public class Population {
         }
     }
 
-    /** Advance internal timers for everyone by one step (call each simulation step). */
-    public void tickAll() {
-        for (Person p : people) p.tick();
-    }
-}
+//     /** Advance internal timers for everyone by one step (call each simulation step). */ TEST DRIVER use when you get home from work 
+//     public void tickAll() {
+//         for (Person p : people) p.tick();
+//     }
+// }
+
+// // src/TestPopulation.java
+// import java.util.Random;
+
+// public class TestPopulation {
+//     public static void main(String[] args) {
+//         // Make a population of 20 all Susceptible
+//         Population pop = new Population(20, HealthState.S);
+//         System.out.println("Initial: S=" + pop.count(HealthState.S) +
+//                            " I=" + pop.count(HealthState.I) +
+//                            " R=" + pop.count(HealthState.R));
+
+//         // Infect 3 at random
+//         pop.seedInitialInfections(3, new Random(42));
+//         System.out.println("After seeding: S=" + pop.count(HealthState.S) +
+//                            " I=" + pop.count(HealthState.I) +
+//                            " R=" + pop.count(HealthState.R));
+
+//         // Advance one step
+//         pop.tickAll();
+//         System.out.println("Ticked time for all. Example first person: " + pop.all().get(0));
+//     }
+// }
