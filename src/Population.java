@@ -66,6 +66,14 @@ public class Population {
             pool.get(i).setState(HealthState.I);
         }
     }
+    /** Advance internal timers for everyone by one step (call each simulation step). */
+public void tickAll() {
+    for (Person p : people) {
+        p.tick();
+    }
+}
+
+}
 
 //     /** Advance internal timers for everyone by one step (call each simulation step). */ TEST DRIVER use when you get home from work 
 //     public void tickAll() {
