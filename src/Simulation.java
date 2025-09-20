@@ -1,4 +1,3 @@
-
 // src/Simulation.java
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -6,11 +5,25 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+// metrics hook (make sure src/metrics/MetricsCollector.java exists)
+import metrics.MetricsCollector;
+
 public class Simulation {
     private Population population;
     private SimParams params;
     private Random rng;
     private int step;
+
+    // OPTIONAL: metrics sink
+    private MetricsCollector metrics;
+
+    /** Allow Main (or tests) to attach a metrics collector. */
+    public void setMetricsCollector(MetricsCollector metrics) {
+        this.metrics = metrics;
+    }
+
+    /** Optional accessor (handy for tests/UI). */
+    public int getStep() { return step; }
 
     public void initialize(SimParams params) {
         this.params = params;
@@ -22,7 +35,17 @@ public class Simulation {
         System.out.printf("Initialized: N=%d, I0=%d, beta=%.3f, gamma=%.3f, k=%d, maxSteps=%d%n",
                 params.populationSize, params.initialInfected, params.beta, params.gamma,
                 params.contactsPerStep, params.maxSteps);
+
+        // initial counts (step 0)
         printCounts();
+
+        // record initial row at step 0
+        if (metrics != null) {
+            int s0 = population.count(HealthState.S);
+            int i0 = population.count(HealthState.I);
+            int r0 = population.count(HealthState.R);
+            metrics.record(step, s0, i0, r0);
+        }
     }
 
     /** Execute one simulation step:
@@ -37,7 +60,6 @@ public class Simulation {
 
         // 1) Potential infections this step
         Set<Person> toInfect = new HashSet<>();
-
         for (Person inf : infectedNow) {
             for (int c = 0; c < params.contactsPerStep; c++) {
                 Person other = randomOtherPerson(inf);
@@ -65,7 +87,16 @@ public class Simulation {
         population.tickAll();
         step++;
 
+        // print post-step counts
         printCounts();
+
+        // record counts for this step
+        if (metrics != null) {
+            int s = population.count(HealthState.S);
+            int i = population.count(HealthState.I);
+            int r = population.count(HealthState.R);
+            metrics.record(step, s, i, r);
+        }
     }
 
     public void run() {
