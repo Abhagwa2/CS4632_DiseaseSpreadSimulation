@@ -116,10 +116,23 @@ public class Simulation {
         return p;
     }
 
-    private void printCounts() {
-        int s = population.count(HealthState.S);
-        int i = population.count(HealthState.I);
-        int r = population.count(HealthState.R);
-        System.out.printf("Step %d: S=%d I=%d R=%d%n", step, s, i, r);
+    // private void printCounts() { in case the tableded printCounts doesnt work remove the count and re instate original 
+    //     int s = population.count(HealthState.S);
+    //     int i = population.count(HealthState.I);
+    //     int r = population.count(HealthState.R);
+    //     System.out.printf("Step %d: S=%d I=%d R=%d%n", step, s, i, r);
+    // }
+private void printCounts() {
+    int s = population.count(HealthState.S);
+    int i = population.count(HealthState.I);
+    int r = population.count(HealthState.R);
+
+    if (step == 0) {
+        // print header once
+        System.out.printf("%-6s %-8s %-8s %-8s%n", "Step", "Suscept.", "Infected", "Recovered");
+        System.out.println("-------------------------------------");
     }
+    System.out.printf("%-6d %-8d %-8d %-8d%n", step, s, i, r);
+}
+
 }
