@@ -1,30 +1,31 @@
-# CS4632_DiseaseSpreadSimulation
 # CS4632 Disease Spread Simulation
 
-Semester project for CS4632.  
-Implements an SIR/SEIR-based simulation of infectious disease spread in a population.  
+Semester project for CS4632 (Modeling & Simulation) at Kennesaw State University.  
+Implements a **stochastic SIR (Susceptible–Infected–Recovered)** model of infectious disease spread in a population, with optional SEIR extension and interventions (e.g., vaccination, quarantine).  
+The simulation is coded in **Java**, following the UML design created in Milestone 1.
 
-## Planned Features
-- Simulation of Susceptible, Infected, and Recovered states
-- Probabilistic infection and recovery
-- Intervention strategies (vaccination, quarantine)
-- Metrics collection (epidemic curves, peak infection, outbreak duration)
+---
 
-## Project Structure
-- `/src` — Java source files (to be added)
-- `/docs` — UML diagrams and project documentation
-- `README.md` — project overview
-- `.gitignore` — Java build artifacts excluded
+## 📌 Project Description
+- Simulates transmission in a closed population.  
+- Individuals can be in one of three health states: **S (Susceptible)**, **I (Infected)**, **R (Recovered)**.  
+- At each step:  
+  - Infected persons attempt to infect `contactsPerStep` random contacts with probability `beta`.  
+  - Infected persons recover with probability `gamma`.  
+- Simulation runs until either:  
+  - No infected individuals remain, or  
+  - `maxSteps` is reached.  
+- Metrics tracked: counts of S, I, R at each step.
 
-## Author
-Alejandro Bhagwandeen
+---
 
-# CS4632 Disease Spread Simulation
+## ⚙️ How to Compile & Run
 
-Initial repo setup for Milestone 2.
+From the repository root:
 
-## Project Structure
-- `/src` : Java source code
-- `/docs` : UML diagrams, reports
-- `README.md` : project overview
-- `.gitignore` : Java build ignores
+```bash
+# Compile all source files into /bin
+javac -d bin src/*.java
+
+# Run the simulation (Main is the entry point)
+java -cp bin Main
