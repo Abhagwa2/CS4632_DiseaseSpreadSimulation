@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.io.IOException;
+
 // metrics hook (make sure src/metrics/MetricsCollector.java exists)
 import metrics.MetricsCollector;
 
@@ -31,6 +36,11 @@ public class Simulation {
         this.population = new Population(params.populationSize, HealthState.S);
         this.population.seedInitialInfections(params.initialInfected, rng);
         this.step = 0;
+
+        // ensure we have a metrics sink (even if setMetricsCollector was never called)
+        if (this.metrics == null) {
+            this.metrics = new MetricsCollector();
+        }
 
         System.out.printf("Initialized: N=%d, I0=%d, beta=%.3f, gamma=%.3f, k=%d, maxSteps=%d%n",
                 params.populationSize, params.initialInfected, params.beta, params.gamma,
@@ -104,6 +114,18 @@ public class Simulation {
             step();
         }
         System.out.println("Simulation finished.");
+
+        // --- Write metrics CSV to runs/baseline/run_seed<seed>.csv ---
+        if (metrics != null) {
+            try {
+                Path out = Paths.get("runs", "baseline", "run_seed" + params.seed + ".csv");
+                Files.createDirectories(out.getParent());   // ensure folder exists
+                metrics.writeCsv(out);
+                System.out.println("Wrote metrics to: " + out.toString());
+            } catch (IOException e) {
+                System.err.println("Failed to write CSV: " + e.getMessage());
+            }
+        }
     }
 
     private Person randomOtherPerson(Person notThisOne) {
@@ -116,23 +138,28 @@ public class Simulation {
         return p;
     }
 
-    // private void printCounts() { in case the tableded printCounts doesnt work remove the count and re instate original 
-    //     int s = population.count(HealthState.S);
-    //     int i = population.count(HealthState.I);
-    //     int r = population.count(HealthState.R);
-    //     System.out.printf("Step %d: S=%d I=%d R=%d%n", step, s, i, r);
-    // }
-private void printCounts() {
-    int s = population.count(HealthState.S);
-    int i = population.count(HealthState.I);
-    int r = population.count(HealthState.R);
+    // in case the tabled printCounts doesn't work for your console,
+    // you can revert to the simple single-line version below.
+    private void printCounts() {
+        int s = population.count(HealthState.S);
+        int i = population.count(HealthState.I);
+        int r = population.count(HealthState.R);
 
-    if (step == 0) {
-        // print header once
-        System.out.printf("%-6s %-8s %-8s %-8s%n", "Step", "Suscept.", "Infected", "Recovered");
-        System.out.println("-------------------------------------");
+        if (step == 0) {
+            // print header once
+            System.out.printf("%-6s %-10s %-10s %-10s%n", "Step", "Suscept.", "Infected", "Recovered");
+            System.out.println("--------------------------------------------");
+        }
+        System.out.printf("%-6d %-10d %-10d %-10d%n", step, s, i, r);
     }
-    System.out.printf("%-6d %-8d %-8d %-8d%n", step, s, i, r);
-}
 
+    /*
+    // Simple alternative:
+    private void printCounts() {
+        int s = population.count(HealthState.S);
+        int i = population.count(HealthState.I);
+        int r = population.count(HealthState.R);
+        System.out.printf("Step %d: S=%d I=%d R=%d%n", step, s, i, r);
+    }
+    */
 }
