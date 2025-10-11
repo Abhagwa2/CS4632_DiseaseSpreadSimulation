@@ -12,7 +12,7 @@ public class Main {
         double gamma = 0.05;
         int k = 5;
         int maxSteps = 100;
-        long seed = 42L;
+        long seed = 44L;
 
         // --- Run three scenarios sequentially ---
         runScenario("baseline", N, I0, beta, gamma, k, maxSteps, seed);
