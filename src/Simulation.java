@@ -18,14 +18,22 @@ public class Simulation {
     private SimParams params;
     private Random rng;
     private int step;
-
-    // OPTIONAL: metrics sink
     private MetricsCollector metrics;
+
+    // scenario-specific output folder (baseline / vaccine30 / quarantine50)
+    private String scenarioFolder = "baseline";
 
     /** Allow Main (or tests) to attach a metrics collector. */
     public void setMetricsCollector(MetricsCollector metrics) {
         this.metrics = metrics;
     }
+
+    /** Choose which folder to save CSVs into. */
+    public void setScenarioFolder(String name) {
+        this.scenarioFolder = (name == null || name.isBlank()) ? "baseline" : name;
+    }
+
+    public String getScenarioFolder() { return this.scenarioFolder; }
 
     /** Optional accessor (handy for tests/UI). */
     public int getStep() { return step; }
@@ -34,6 +42,8 @@ public class Simulation {
         this.params = params;
         this.rng = new Random(params.seed);
         this.population = new Population(params.populationSize, HealthState.S);
+
+        // seed initial infections
         this.population.seedInitialInfections(params.initialInfected, rng);
         this.step = 0;
 
@@ -42,9 +52,17 @@ public class Simulation {
             this.metrics = new MetricsCollector();
         }
 
-        System.out.printf("Initialized: N=%d, I0=%d, beta=%.3f, gamma=%.3f, k=%d, maxSteps=%d%n",
-                params.populationSize, params.initialInfected, params.beta, params.gamma,
-                params.contactsPerStep, params.maxSteps);
+        // --- apply scenario-specific setup BEFORE printing/recording step 0 ---
+        if ("vaccine30".equals(scenarioFolder)) {
+            vaccinate(0.30); // move 30% of susceptibles to Recovered at t=0
+            System.out.println("[vaccine30] Applied 30% vaccination at t=0.");
+        }
+
+        System.out.printf(
+            "Initialized: N=%d, I0=%d, beta=%.3f, gamma=%.3f, k=%d, maxSteps=%d, scenario=%s%n",
+            params.populationSize, params.initialInfected, params.beta, params.gamma,
+            params.contactsPerStep, params.maxSteps, scenarioFolder
+        );
 
         // initial counts (step 0)
         printCounts();
@@ -68,10 +86,19 @@ public class Simulation {
         // Snapshot who is infected at the start of the step
         List<Person> infectedNow = population.getByState(HealthState.I);
 
+        // Determine effective contacts per infected for this step
+        int kEff = params.contactsPerStep;
+        if ("quarantine50".equals(scenarioFolder)) {
+            double prevalence = (double) population.count(HealthState.I) / population.size();
+            if (prevalence > 0.05) { // trigger when >5% infected
+                kEff = Math.max(1, (int)Math.round(0.5 * kEff)); // reduce by 50%
+            }
+        }
+
         // 1) Potential infections this step
         Set<Person> toInfect = new HashSet<>();
         for (Person inf : infectedNow) {
-            for (int c = 0; c < params.contactsPerStep; c++) {
+            for (int c = 0; c < kEff; c++) {
                 Person other = randomOtherPerson(inf);
                 if (other.getState() == HealthState.S) {
                     if (rng.nextDouble() < params.beta) {
@@ -115,13 +142,13 @@ public class Simulation {
         }
         System.out.println("Simulation finished.");
 
-        // --- Write metrics CSV to runs/baseline/run_seed<seed>.csv ---
+        // --- Write metrics CSV to runs/<scenarioFolder>/run_seed<seed>.csv ---
         if (metrics != null) {
             try {
-                Path out = Paths.get("runs", "baseline", "run_seed" + params.seed + ".csv");
+                Path out = Paths.get("runs", scenarioFolder, "run_seed" + params.seed + ".csv");
                 Files.createDirectories(out.getParent());   // ensure folder exists
                 metrics.writeCsv(out);
-                System.out.println("Wrote metrics to: " + out.toString());
+                System.out.println("Wrote metrics to: " + out);
             } catch (IOException e) {
                 System.err.println("Failed to write CSV: " + e.getMessage());
             }
@@ -138,8 +165,7 @@ public class Simulation {
         return p;
     }
 
-    // in case the tabled printCounts doesn't work for your console,
-    // you can revert to the simple single-line version below.
+    // pretty table printout
     private void printCounts() {
         int s = population.count(HealthState.S);
         int i = population.count(HealthState.I);
@@ -153,13 +179,19 @@ public class Simulation {
         System.out.printf("%-6d %-10d %-10d %-10d%n", step, s, i, r);
     }
 
-    /*
-    // Simple alternative:
-    private void printCounts() {
-        int s = population.count(HealthState.S);
-        int i = population.count(HealthState.I);
-        int r = population.count(HealthState.R);
-        System.out.printf("Step %d: S=%d I=%d R=%d%n", step, s, i, r);
+    // Move a fraction of current susceptibles to Recovered at t=0
+    private void vaccinate(double fraction) {
+        if (fraction <= 0) return;
+        var susceptibles = population.getByState(HealthState.S);
+        if (susceptibles == null || susceptibles.isEmpty()) return;
+
+        // shuffle to pick random susceptibles
+        java.util.Collections.shuffle(susceptibles, rng);
+        int toVaccinate = (int)Math.round(fraction * susceptibles.size());
+        toVaccinate = Math.min(toVaccinate, susceptibles.size());
+
+        for (int i = 0; i < toVaccinate; i++) {
+            susceptibles.get(i).setState(HealthState.R);
+        }
     }
-    */
 }
