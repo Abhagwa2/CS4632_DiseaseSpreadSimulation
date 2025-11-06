@@ -20,7 +20,7 @@ public class Simulation {
     private int step;
     private MetricsCollector metrics;
 
-    // scenario-specific output folder (baseline / vaccine30 / quarantine50)
+    // scenario-specific output folder (baseline / vaccine30 / quarantine50 / combo)
     private String scenarioFolder = "baseline";
 
     /** Allow Main (or tests) to attach a metrics collector. */
@@ -54,14 +54,12 @@ public class Simulation {
 
         // --- apply scenario-specific setup BEFORE printing/recording step 0 ---
         if ("vaccine30".equals(scenarioFolder)) {
-            vaccinate(0.30); // move 30% of susceptibles to Recovered at t=0
+            vaccinate(0.30); // 30% vaccination at t=0
             System.out.println("[vaccine30] Applied 30% vaccination at t=0.");
+        } else if ("combo".equals(scenarioFolder)) {
+            vaccinate(0.20); // 20% vaccination at t=0
+            System.out.println("[combo] Applied 20% vaccination at t=0.");
         }
-       // else if ("combo".equals(scenarioFolder)) {
-   // vaccinate(0.20); // vaccinate 20%
-   // System.out.println("[combo] Applied 20% vaccination at t=0.");
-//} set up twords the combo 
-
 
         System.out.printf(
             "Initialized: N=%d, I0=%d, beta=%.3f, gamma=%.3f, k=%d, maxSteps=%d, scenario=%s%n",
@@ -93,19 +91,14 @@ public class Simulation {
 
         // Determine effective contacts per infected for this step
         int kEff = params.contactsPerStep;
-        if ("quarantine50".equals(scenarioFolder)) {
+
+        // Quarantine logic applies to quarantine50 AND combo
+        if ("quarantine50".equals(scenarioFolder) || "combo".equals(scenarioFolder)) {
             double prevalence = (double) population.count(HealthState.I) / population.size();
             if (prevalence > 0.05) { // trigger when >5% infected
                 kEff = Math.max(1, (int)Math.round(0.5 * kEff)); // reduce by 50%
             }
         }
-      //  else if ("combo".equals(scenarioFolder)) {
-   // double prevalence = (double) population.count(HealthState.I) / population.size();
-   // if (prevalence > 0.05) {
-     //   kEff = Math.max(1, (int)Math.round(0.5 * kEff)); // quarantine effect
-   // }
-//} same change here 
-
 
         // 1) Potential infections this step
         Set<Person> toInfect = new HashSet<>();

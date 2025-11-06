@@ -18,7 +18,7 @@ public class Main {
         runScenario("baseline", N, I0, beta, gamma, k, maxSteps, seed);
         runScenario("vaccine30", N, I0, beta, gamma, k, maxSteps, seed);
         runScenario("quarantine50", N, I0, beta, gamma, k, maxSteps, seed);
-        //runScenario("combo", N, I0, beta, gamma, k, maxSteps, seed); // added this to implement "Combo" Files 20% vaccination + 50% quarantine
+        runScenario("combo", N, I0, beta, gamma, k, maxSteps, seed); // added this to implement "Combo" Files 20% vaccination + 50% quarantine
 
     }
 
